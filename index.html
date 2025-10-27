@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡易圖形編輯器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .toolbar {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn.active {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+            transform: scale(0.95);
+        }
+
+        .color-picker {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-picker input[type="color"] {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .slider-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-group input[type="range"] {
+            width: 150px;
+        }
+
+        .canvas-container {
+            padding: 20px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 600px;
+        }
+
+        #canvas {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            cursor: crosshair;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            display: none;
+        }
+
+        .shapes-list {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 2px solid #e0e0e0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .shape-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .shape-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .shape-info {
+            flex: 1;
+        }
+
+        .shape-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .shape-actions button {
+            padding: 5px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .icon {
+            font-size: 18px;
+        }
+
+        .divider {
+            width: 2px;
+            height: 30px;
+            background: #ddd;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 簡易圖形編輯器</h1>
+            <p>上傳圖片、繪製圖形、編輯、下載</p>
+        </div>
+
+        <div class="toolbar">
+            <!-- 檔案操作 -->
+            <div class="file-input-wrapper">
+                <button class="btn btn-primary" id="uploadBtn">
+                    <span class="icon">📁</span> 上傳圖片
+                </button>
+                <input type="file" id="imageUpload" accept="image/*">
+            </div>
+
+            <button class="btn btn-success" id="downloadBtn">
+                <span class="icon">💾</span> 下載圖片
+            </button>
+
+            <button class="btn btn-warning" id="downloadJSONBtn">
+                <span class="icon">📄</span> 下載 JSON
+            </button>
+
+            <button class="btn btn-primary" id="detectBtn" style="background: #6f42c1;">
+                <span class="icon">🔍</span> 辨識圖形
+            </button>
+
+            <button class="btn btn-danger" id="clearBtn">
+                <span class="icon">🗑️</span> 清空畫布
+            </button>
+
+            <div class="divider"></div>
+
+            <!-- 合併工具 -->
+            <button class="btn btn-warning" id="mergeBtn" style="background: #9C27B0; color: white;">
+                <span class="icon">🔗</span> 合併矩形
+            </button>
+            
+            <button class="btn btn-danger" id="cancelMergeBtn" style="display: none;">
+                <span class="icon">✖</span> 取消合併
+            </button>
+
+            <div class="divider"></div>
+
+            <!-- 繪圖工具 -->
+            <button class="btn btn-info" id="selectBtn">
+                <span class="icon">👆</span> 選取/移動
+            </button>
+
+            <button class="btn btn-info" id="lineBtn">
+                <span class="icon">📏</span> 線段
+            </button>
+
+            <button class="btn btn-info" id="rectBtn">
+                <span class="icon">▭</span> 矩形
+            </button>
+
+            <button class="btn btn-info" id="circleBtn">
+                <span class="icon">⭕</span> 圓形
+            </button>
+
+            <div class="divider"></div>
+
+            <!-- 顏色選擇 -->
+            <div class="color-picker">
+                <label>顏色：</label>
+                <input type="color" id="colorPicker" value="#000000">
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- 線條粗細 -->
+            <div class="slider-group">
+                <label>粗細：</label>
+                <input type="range" id="lineWidth" min="1" max="20" value="2">
+                <span id="lineWidthValue">2</span>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvas" width="800" height="600"></canvas>
+        </div>
+
+        <div class="shapes-list">
+            <h3 style="margin-bottom: 15px;">📋 圖形列表</h3>
+            <div id="shapesList"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/opencv.js@1.2.1/opencv.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
